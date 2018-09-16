@@ -7,5 +7,8 @@ public class Constants {
     public static int SCREEN_HEIGTH;
     public static Context CURRENT_CONTEXT;
     public static long INIT_TIME;
+    public static float X_SENS;
+    public static float Y_SENS;
+
 
 }

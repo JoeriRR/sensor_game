@@ -2,53 +2,94 @@ package com.joeribv.joerisgame;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
+import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Point;
+import android.media.MediaPlayer;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.util.ArrayList;
+
 public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
+    /* sound variables */
+    MediaPlayer myMusic;
+    MediaPlayer myFail;
+
+    /* thread variables*/
     private MainThread thread;
-    private int score = 1;
+
+    /* player variables */
     private int color_p = Color.RED;
     private int color_f = Color.BLUE;
+    private int color_shield = Color.YELLOW;
     private PlayerLoc player;
     private Point playerPoint;
     private PlayerLoc finish_p;
     private Point finishPoint;
+    private PictureLoc shield;
+    private Point shield_p;
     private float radius = 10;
     private float radius_f = 50;
-
-    private Obstacles obstacle;
-
+    private float radius_c = 50;
+    private float shield_r;
+    private BitmapFactory bf;
+    /* sensor variables */
     private OrientationData orientationData;
+
+    /* score variables */
     private long frameTime;
     private boolean gameFinished = false; // check collision
     private long gameFinishTime;
+    private int shield_timer;
+    private int score = 1;
 
+    /* animation variables */
     private ObstacleMover obstacleMover;
+    private int obstacleWidth = 50;
+    private int obstacleHeigth = 200;
+    private int[] x = new int[4];
+
+    DataBaseManager dataBaseManager;
+
     public GamePanel(Context context){
         super(context);
         Constants.CURRENT_CONTEXT = context;
+        x[0] = obstacleWidth; x[1]= Constants.SCREEN_WIDTH-x[0]; x[2] = obstacleWidth; x[3]=Constants.SCREEN_HEIGTH-x[2];
         /* initiate sensors */
         orientationData = new OrientationData();
         orientationData.register();
         /* generate player */
-        player = new PlayerLoc(100,200,radius,color_p);
+        bf = new BitmapFactory();
+        Bitmap shield_pic = bf.decodeResource(Constants.CURRENT_CONTEXT.getResources(),R.drawable.picture_shield);
+        player = new PlayerLoc(Constants.SCREEN_WIDTH/2,Constants.SCREEN_HEIGTH/2,radius,color_p);
         playerPoint = new Point(Constants.SCREEN_WIDTH/2,3*Constants.SCREEN_HEIGTH/4);
         /* generate finish point */
-        finish_p = new PlayerLoc(100,200,radius_f,color_f);
-        finishPoint = new Point(Constants.SCREEN_WIDTH/2,Constants.SCREEN_HEIGTH/4);
+        finish_p = new PlayerLoc(Constants.SCREEN_WIDTH/2,Constants.SCREEN_HEIGTH/4,radius_f,color_f);
+        finishPoint = new Point((int)(x[0]+radius_f+(Math.random()*(((x[1]-radius_f)-(x[0]+radius_f))+1))),(int)(x[2]+radius_f+(Math.random()*((x[3]-radius_f)-(x[2]+radius_f))+1)));
+        /* generate shield point*/
+        shield = new PictureLoc((int)(x[0]+radius_f+(Math.random()*(((x[1]-radius_f)-(x[0]+radius_f))+1))),(int)(x[2]+radius_f+(Math.random()*((x[3]-radius_f)-(x[2]+radius_f))+1)),radius_c,color_shield,shield_pic);
+        shield_p = new Point((int)(x[0]+radius_f+(Math.random()*(((x[1]-radius_f)-(x[0]+radius_f))+1))),(int)(x[2]+radius_f+(Math.random()*((x[3]-radius_f)-(x[2]+radius_f))+1)));
+        shield_r = 20;
+        shield_timer = (int)(Math.random()*4+8);
         /* start game thread */
         getHolder().addCallback(this);
         thread = new MainThread(getHolder(),this);
         frameTime = System.currentTimeMillis();
         setFocusable(true);
-        /* generate test obstace */
-        //obstacle = new Obstacles(100,300,Color.BLACK,300 ,600);
-        obstacleMover = new ObstacleMover(50,200,score);
+        dataBaseManager = new DataBaseManager();
+
+
+        /* obstacle generator */ // scale obstacleheigth percentage.
+        obstacleMover = new ObstacleMover(obstacleWidth,obstacleHeigth,score);
+        myMusic = MediaPlayer.create(Constants.CURRENT_CONTEXT,R.raw.impossible);
+        myFail = MediaPlayer.create(Constants.CURRENT_CONTEXT,R.raw.failsound);
+        myMusic.start();
     }
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int heigth){
@@ -83,30 +124,50 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
             if (orientationData.getOrientation() != null && orientationData.getStartOrientation() != null) {
                 float pitch = orientationData.getOrientation()[1] - orientationData.getStartOrientation()[1];
                 float roll = orientationData.getOrientation()[2] - orientationData.getStartOrientation()[2];
-                float xSpeed = roll * Constants.SCREEN_WIDTH / 1000f; // add scaling
-                float ySpeed = pitch * Constants.SCREEN_HEIGTH / 1000f; // add scaling
+                float xSpeed = roll * Constants.SCREEN_WIDTH / 1000f*(Constants.X_SENS+10)/50;
+                float ySpeed = pitch * Constants.SCREEN_HEIGTH / 1000f*(Constants.Y_SENS+10)/50;
                 playerPoint.x += Math.abs(xSpeed * elapsedTime) > 5 ? xSpeed * elapsedTime : 0;
                 playerPoint.y -= Math.abs(ySpeed * elapsedTime) > 5 ? ySpeed * elapsedTime : 0;
             }
-            if (playerPoint.x < radius) {
-                playerPoint.x = (int) radius;
-            } else if (playerPoint.x > Constants.SCREEN_WIDTH) {
-                playerPoint.x = Constants.SCREEN_WIDTH - (int) radius;
+            if (playerPoint.x < (radius+x[0])) {
+                playerPoint.x = (int) (radius+x[0]);
+            } else if (playerPoint.x > (x[1]-radius)) {
+                playerPoint.x = (int)(x[1]-radius);
             }
-            if (playerPoint.y < radius) {
-                playerPoint.y = (int) radius;
-            } else if (playerPoint.y > Constants.SCREEN_HEIGTH) {
-                playerPoint.y = Constants.SCREEN_HEIGTH - (int) radius;
+            if (playerPoint.y < (radius+x[2])) {
+                playerPoint.y = (int) (radius+x[2]);
+            } else if (playerPoint.y > (x[3]-radius)) {
+                playerPoint.y = (int) (x[3]-radius);
             }
-            player.update(playerPoint);
-            finish_p.update(finishPoint);
             obstacleMover.update();
+            player.update(playerPoint);
+            if(obstacleMover.playerCollide(player)){
+                if(player.getRadius()==(radius+shield_r)){
+                    player.setRadius(radius);
+                    player.setColor(Color.RED);
+                    // remove obstacle;
+                    obstacleMover.remove();
+                }else {
+                    gameFinished = true;
+                    gameFinishTime = System.currentTimeMillis();
+                    dataBaseManager.updateDatabase(score);
+                    myMusic.stop();
+                    myFail.start();
+                }
+            }
             if (player.playerFinished(player, finish_p)) {
                 score ++;
-                obstacleMover.setScore((int)(1+score/5));
-                finishPoint = new Point((int)(Math.random()*Constants.SCREEN_WIDTH-radius),(int)(Math.random()*Constants.SCREEN_HEIGTH-radius));
-                //gameFinishTime = System.currentTimeMillis();
-                //gameFinished = true;
+                obstacleMover.setScore(1+score/5);
+                finishPoint = new Point((int)(x[0]+radius_f+(Math.random()*(((x[1]-radius_f)-(x[0]+radius_f))+1))),(int)(x[2]+radius_f+(Math.random()*((x[3]-radius_f)-(x[2]+radius_f))+1)));
+                finish_p.update(finishPoint);
+            }
+            if(score>=shield_timer) {
+                if (shield.playerFinished(player, shield)) {
+                    player.setRadius(radius + shield_r);
+                    player.setColor(Color.YELLOW);
+                    shield.update(shield_p);
+                    shield_timer = shield_timer + (int)(Math.random()*4+8);
+                }
             }
         }
     }
@@ -116,14 +177,18 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
         canvas.drawColor(Color.WHITE);
         player.draw(canvas);
         finish_p.draw(canvas);
+        drawField(canvas,x);
+        Paint text_paint = new Paint();
+        text_paint.setTextSize(40);
+        text_paint.setColor(Color.BLUE);
+        canvas.drawText("Score= " +(score-1),40,40,text_paint);
+        if(score>=shield_timer) {
+            shield.draw(canvas);
+        }
         obstacleMover.draw(canvas);
         if(gameFinished){
-            // print some text (time/level/etc)
-            if((System.currentTimeMillis()-gameFinishTime)>=2000){
-                gameFinished = false;
-                Intent intent = new Intent(Constants.CURRENT_CONTEXT,MainActivity.class);
-                Constants.CURRENT_CONTEXT.startActivity(intent);
-                // finish activity when finished reached (change to when object collided or time up)
+            if((System.currentTimeMillis()-gameFinishTime)>=4000){
+                myFail.stop();
                 ((Activity) Constants.CURRENT_CONTEXT).finish();
             }
         }
@@ -131,5 +196,25 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
     public void reset(){
         // playerPoint = new Point(Constants.SCREEN_WIDTH/2,3*Constants.SCREEN_HEIGTH/4);
         // player.update(playerPoint);
+        myMusic.stop();
+        myFail.stop();
+    }
+    private void drawField(Canvas canvas,int[] x){
+        Paint paint = new Paint();
+        paint.setColor(Color.BLACK);
+        paint.setStrokeWidth(5);
+        paint.setStyle(Paint.Style.STROKE);
+        Path path = new Path();
+        path.moveTo(x[0],x[2]);
+        path.lineTo(x[0],x[3]);
+        path.lineTo(x[1],x[3]);
+        path.lineTo(x[1],x[2]);
+        path.lineTo(x[0],x[2]);
+        // create dotted line 50/50 dotted
+        float[] intervals = new float[]{50.0f, 50.0f};
+        float phase = 0;
+        DashPathEffect dashPathEffect = new DashPathEffect(intervals, phase);
+        paint.setPathEffect(dashPathEffect);
+        canvas.drawPath(path,paint);
     }
 }

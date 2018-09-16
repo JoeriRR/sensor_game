@@ -1,13 +1,14 @@
 package com.joeribv.joerisgame;
 
 import android.app.Activity;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Window;
 import android.view.WindowManager;
 
 public class GameActivity extends Activity {
-
+    private GamePanel game;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -17,6 +18,13 @@ public class GameActivity extends Activity {
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         Constants.SCREEN_WIDTH = dm.widthPixels;
         Constants.SCREEN_HEIGTH = dm.heightPixels;
-        setContentView(new GamePanel(this));
+        game = new GamePanel(this);
+        setContentView(game);
+
+    }
+    @Override
+    public void onBackPressed(){
+        game.reset();
+        super.onBackPressed();
     }
 }
