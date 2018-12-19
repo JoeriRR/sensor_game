@@ -19,8 +19,6 @@ public class DataBaseSorter implements Comparable<DataBaseSorter> {
     }
     @Override
     public String toString(){
-        return "Name: " + this.name + "score: " + this.score;
+        return "Name: " + this.name + " score: " + this.score;
     }
-
-
 }

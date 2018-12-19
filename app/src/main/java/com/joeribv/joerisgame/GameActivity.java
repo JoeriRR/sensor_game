@@ -1,7 +1,6 @@
 package com.joeribv.joerisgame;
 
 import android.app.Activity;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Window;
@@ -13,6 +12,7 @@ public class GameActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); // not tested yet.
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
@@ -20,6 +20,7 @@ public class GameActivity extends Activity {
         Constants.SCREEN_HEIGTH = dm.heightPixels;
         game = new GamePanel(this);
         setContentView(game);
+
 
     }
     @Override

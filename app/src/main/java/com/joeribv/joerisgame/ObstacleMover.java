@@ -25,7 +25,7 @@ public class ObstacleMover {
     }
     public void populate(){
         while(obstacles.size()<score){
-            obstacles.add(new Obstacles(obstaceWidth,obstacleHeigth, Color.BLACK,Math.round((float)((Math.random()*3)+1))));
+            obstacles.add(new Obstacles(obstaceWidth,obstacleHeigth, Color.BLACK,Math.round((float)((Math.random()*3)+1)))); // Spawn at random side
         }
     }
     public boolean playerCollide(PlayerLoc player){
@@ -47,12 +47,12 @@ public class ObstacleMover {
         }
         int elapsedTime = (int)(System.currentTimeMillis()-startTime);
         startTime = System.currentTimeMillis();
-        float speed = (float)(Math.sqrt(1+(startTime-initTime)/2000)*Constants.SCREEN_HEIGTH/10000.0f);
-        // add new obstacle each 5 points gained
+        float speed = (float)(Math.sqrt(1+(startTime-initTime)/2000)*Constants.SCREEN_HEIGTH/10000.0f); // add difficulty scaling.
+        // add new obstacle each 5 points gained (see variable spawn_update) score here is (1+game_score/spawn_update) --> spawn_update = 5
         if(obstacles.size()<score){
             obstacles.add(new Obstacles(obstaceWidth,obstacleHeigth, Color.BLACK,Math.round((float)((Math.random()*3)+1))));
         }
-        // remove objects if they are offscreen to do: create function
+        // remove objects if they are offscreen
         for(Iterator<Obstacles> it = obstacles.iterator(); it.hasNext();){
             Obstacles ob = it.next();
             int mode = ob.getMode();

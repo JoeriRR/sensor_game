@@ -21,6 +21,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -36,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     // to do, add setting button and add xsens/ysens to prefs!
-    // fig bug database update
     // create highscore activity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,19 +100,20 @@ public class MainActivity extends AppCompatActivity {
             editor.putString("level",Integer.toString(temp));
             editor.apply();
         }
-
         database.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 dataBaseManager.onChildAdded(dataSnapshot,s,sortList);
+                Constants.MIN_SCORE = sortList.get(sortList.size()-1).getScore();
+                Constants.DATASIZE = sortList.size();
                 mAdapter.notifyDataSetChanged();
-
             }
             @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {               dataBaseManager.onChildAdded(dataSnapshot,s,sortList);
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
                 dataBaseManager.onChildAdded(dataSnapshot,s,sortList);
+                Constants.MIN_SCORE = sortList.get(sortList.size()-1).getScore();
+                Constants.DATASIZE = sortList.size();
                 mAdapter.notifyDataSetChanged();
-
             }
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
@@ -126,8 +127,6 @@ public class MainActivity extends AppCompatActivity {
             public void onCancelled(DatabaseError error) {
             }
         });
-
-
     }
 
     public void StartGame(View view){

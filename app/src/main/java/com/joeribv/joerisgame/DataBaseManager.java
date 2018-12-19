@@ -11,20 +11,21 @@ import java.util.Collections;
 import static android.content.Context.MODE_PRIVATE;
 
 public class DataBaseManager {
-    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    private FirebaseDatabase database = FirebaseDatabase.getInstance();
     private int dataLength = 50;
     public DataBaseManager(){
 
     }
     public void updateDatabase(int score){
-        // check whether player is in top 50 else dont update database.
         DatabaseReference root = database.getReference();
         DatabaseReference newChild = root.push();
         DatabaseReference gameScore = newChild.child("gameScore");
         DatabaseReference name = newChild.child("name");
-
-        gameScore.setValue(Integer.toString(score));
-        name.setValue(Constants.CURRENT_CONTEXT.getSharedPreferences("prefs", MODE_PRIVATE).getString("name", ""));
+        // only update data when player is top 50 werkt volgens mij niet door min_score.
+        if(Constants.DATASIZE <= dataLength || score > Constants.MIN_SCORE) {
+            gameScore.setValue(Integer.toString(score));
+            name.setValue(Constants.CURRENT_CONTEXT.getSharedPreferences("prefs", MODE_PRIVATE).getString("name", ""));
+        }
 
     }
 

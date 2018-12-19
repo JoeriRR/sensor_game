@@ -9,6 +9,7 @@ public class Constants {
     public static long INIT_TIME;
     public static float X_SENS;
     public static float Y_SENS;
-
+    public static int DATASIZE;
+    public static int MIN_SCORE;
 
 }

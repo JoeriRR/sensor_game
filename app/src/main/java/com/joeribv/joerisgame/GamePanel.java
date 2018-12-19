@@ -34,10 +34,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
     private Point finishPoint;
     private PictureLoc shield;
     private Point shield_p;
-    private float radius = 10;
-    private float radius_f = 50;
-    private float radius_c = 50;
-    private float shield_r;
+    private float radius = (int)(Constants.SCREEN_WIDTH/108.0);
+    private float radius_f = (int)(Constants.SCREEN_WIDTH/21.6);
+    private float radius_c = (int)(Constants.SCREEN_WIDTH/21.6);
+    private float shield_r = (int)(Constants.SCREEN_WIDTH/59);;
     private BitmapFactory bf;
     /* sensor variables */
     private OrientationData orientationData;
@@ -51,8 +51,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
 
     /* animation variables */
     private ObstacleMover obstacleMover;
-    private int obstacleWidth = 50;
-    private int obstacleHeigth = 200;
+    private int obstacleWidth = (int)(Constants.SCREEN_WIDTH/21.6); // scale with screenwidth
+    private int obstacleHeigth = (int)(Constants.SCREEN_HEIGTH/9.6); // scale with screenwidth
+    private int spawn_update = 5;
     private int[] x = new int[4];
 
     DataBaseManager dataBaseManager;
@@ -75,7 +76,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
         /* generate shield point*/
         shield = new PictureLoc((int)(x[0]+radius_f+(Math.random()*(((x[1]-radius_f)-(x[0]+radius_f))+1))),(int)(x[2]+radius_f+(Math.random()*((x[3]-radius_f)-(x[2]+radius_f))+1)),radius_c,color_shield,shield_pic);
         shield_p = new Point((int)(x[0]+radius_f+(Math.random()*(((x[1]-radius_f)-(x[0]+radius_f))+1))),(int)(x[2]+radius_f+(Math.random()*((x[3]-radius_f)-(x[2]+radius_f))+1)));
-        shield_r = 20;
+
         shield_timer = (int)(Math.random()*4+8);
         /* start game thread */
         getHolder().addCallback(this);
@@ -145,19 +146,18 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
                 if(player.getRadius()==(radius+shield_r)){
                     player.setRadius(radius);
                     player.setColor(Color.RED);
-                    // remove obstacle;
                     obstacleMover.remove();
                 }else {
                     gameFinished = true;
                     gameFinishTime = System.currentTimeMillis();
-                    dataBaseManager.updateDatabase(score);
+                    dataBaseManager.updateDatabase(score-1); // score starts on 1
                     myMusic.stop();
                     myFail.start();
                 }
             }
             if (player.playerFinished(player, finish_p)) {
                 score ++;
-                obstacleMover.setScore(1+score/5);
+                obstacleMover.setScore(1+score/spawn_update);
                 finishPoint = new Point((int)(x[0]+radius_f+(Math.random()*(((x[1]-radius_f)-(x[0]+radius_f))+1))),(int)(x[2]+radius_f+(Math.random()*((x[3]-radius_f)-(x[2]+radius_f))+1)));
                 finish_p.update(finishPoint);
             }
@@ -194,8 +194,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
         }
     }
     public void reset(){
-        // playerPoint = new Point(Constants.SCREEN_WIDTH/2,3*Constants.SCREEN_HEIGTH/4);
-        // player.update(playerPoint);
         myMusic.stop();
         myFail.stop();
     }

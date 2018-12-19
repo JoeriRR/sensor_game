@@ -10,9 +10,10 @@ import java.util.ArrayList;
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     private ArrayList<DataBaseSorter> mDataset;
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView tv;
+        public TextView tv, tv1;
         public ViewHolder(View v) {
             super(v);
+            tv1 = v.findViewById(R.id.textView2);
             tv = v.findViewById(R.id.textView10);
         }
     }
@@ -27,7 +28,8 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     }
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.tv.setText(mDataset.get(position).toString());
+        holder.tv.setText(mDataset.get(position).getName());
+        holder.tv1.setText(Integer.toString( mDataset.get(position).getScore()));
     }
     @Override
     public int getItemCount() {
