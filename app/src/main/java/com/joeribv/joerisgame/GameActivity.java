@@ -21,7 +21,6 @@ public class GameActivity extends Activity {
         game = new GamePanel(this);
         setContentView(game);
 
-
     }
     @Override
     public void onBackPressed(){

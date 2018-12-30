@@ -11,6 +11,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.media.MediaPlayer;
+import android.os.Bundle;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -48,18 +49,23 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
     private long gameFinishTime;
     private int shield_timer;
     private int score = 1;
+    private String difficulty;
 
     /* animation variables */
+    /* get difficulty from mainactivity*/
     private ObstacleMover obstacleMover;
     private int obstacleWidth = (int)(Constants.SCREEN_WIDTH/21.6); // scale with screenwidth
     private int obstacleHeigth = (int)(Constants.SCREEN_HEIGTH/9.6); // scale with screenwidth
     private int spawn_update = 5;
     private int[] x = new int[4];
-
+    private float speed_scaling = 1;
     DataBaseManager dataBaseManager;
 
     public GamePanel(Context context){
         super(context);
+        Bundle level = ((Activity) context).getIntent().getExtras();
+        difficulty = level.getString("difficulty");
+        SetLevelVar(difficulty);
         Constants.CURRENT_CONTEXT = context;
         x[0] = obstacleWidth; x[1]= Constants.SCREEN_WIDTH-x[0]; x[2] = obstacleWidth; x[3]=Constants.SCREEN_HEIGTH-x[2];
         /* initiate sensors */
@@ -87,7 +93,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
 
 
         /* obstacle generator */ // scale obstacleheigth percentage.
-        obstacleMover = new ObstacleMover(obstacleWidth,obstacleHeigth,score);
+        obstacleMover = new ObstacleMover(obstacleWidth,obstacleHeigth,score,speed_scaling);
         myMusic = MediaPlayer.create(Constants.CURRENT_CONTEXT,R.raw.impossible);
         myFail = MediaPlayer.create(Constants.CURRENT_CONTEXT,R.raw.failsound);
         myMusic.start();
@@ -150,14 +156,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
                 }else {
                     gameFinished = true;
                     gameFinishTime = System.currentTimeMillis();
-                    dataBaseManager.updateDatabase(score-1); // score starts on 1
+                    dataBaseManager.updateDatabase(score-1,difficulty); // score starts on 1
                     myMusic.stop();
                     myFail.start();
                 }
             }
             if (player.playerFinished(player, finish_p)) {
                 score ++;
-                obstacleMover.setScore(1+score/spawn_update);
+                obstacleMover.setScore(score/spawn_update);
                 finishPoint = new Point((int)(x[0]+radius_f+(Math.random()*(((x[1]-radius_f)-(x[0]+radius_f))+1))),(int)(x[2]+radius_f+(Math.random()*((x[3]-radius_f)-(x[2]+radius_f))+1)));
                 finish_p.update(finishPoint);
             }
@@ -215,4 +221,28 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
         paint.setPathEffect(dashPathEffect);
         canvas.drawPath(path,paint);
     }
+
+    private void SetLevelVar(String difficulty){
+        switch(difficulty) {
+            case "hard":
+                speed_scaling = 1;
+                spawn_update = 5;
+                obstacleWidth = obstacleWidth*1;
+                obstacleHeigth = obstacleHeigth*1;
+                break;
+            case "extreme":
+                speed_scaling = (float)1.1;
+                spawn_update = 3;
+                obstacleWidth = (int)(obstacleWidth*1.3);
+                obstacleHeigth = (int)(obstacleHeigth*1.3);
+                break;
+            case "god":
+                speed_scaling = (float)1.2;
+                spawn_update = 1;
+                obstacleWidth = (int)(obstacleWidth*1.6);
+                obstacleHeigth = (int)(obstacleHeigth*1.6);
+                break;
+        }
+    }
+
 }

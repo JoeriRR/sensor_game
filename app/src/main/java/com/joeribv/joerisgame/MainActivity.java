@@ -6,42 +6,24 @@ import android.content.SharedPreferences;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
     private SeekBar xBar;
     private SeekBar yBar;
     private String name;
     private int temp = 0;
-    private ArrayList<DataBaseSorter> sortList = new ArrayList<>();
-    DataBaseManager dataBaseManager;
 
-    private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter mAdapter;
-    private RecyclerView.LayoutManager mLayoutManager;
     // to do, add setting button and add xsens/ysens to prefs!
     // create highscore activity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        dataBaseManager = new DataBaseManager();
         setContentView(R.layout.activity_main);
         xBar = (SeekBar) findViewById(R.id.seekBar);
         yBar = (SeekBar) findViewById(R.id.seekBar2);
@@ -82,16 +64,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         final SharedPreferences prefs = getSharedPreferences("prefs", MODE_PRIVATE);
-        final DatabaseReference database = FirebaseDatabase.getInstance().getReference();
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
-        mRecyclerView.setHasFixedSize(true);
-        mLayoutManager = new LinearLayoutManager(this);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-
-        mAdapter = new MyAdapter(sortList);
-        mRecyclerView.setAdapter(mAdapter);
-
+        /* name settings */
         if (prefs.getString("name", "").isEmpty()) {
             changeName();
         }
@@ -100,39 +74,33 @@ public class MainActivity extends AppCompatActivity {
             editor.putString("level",Integer.toString(temp));
             editor.apply();
         }
-        database.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                dataBaseManager.onChildAdded(dataSnapshot,s,sortList);
-                Constants.MIN_SCORE = sortList.get(sortList.size()-1).getScore();
-                Constants.DATASIZE = sortList.size();
-                mAdapter.notifyDataSetChanged();
-            }
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                dataBaseManager.onChildAdded(dataSnapshot,s,sortList);
-                Constants.MIN_SCORE = sortList.get(sortList.size()-1).getScore();
-                Constants.DATASIZE = sortList.size();
-                mAdapter.notifyDataSetChanged();
-            }
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-            @Override
-            public void onCancelled(DatabaseError error) {
-            }
-        });
     }
-
-    public void StartGame(View view){
+    public void hardGame(View view){
         Intent intent = new Intent(this,GameActivity.class);
+        String difficulty = "hard";
+        intent.putExtra("difficulty",difficulty);
+        Constants.CUR_DIFF = difficulty;
         startActivity(intent);
     }
+    public void extremeGame(View view){
+        Intent intent = new Intent(this,GameActivity.class);
+        String difficulty = "extreme";
+        intent.putExtra("difficulty",difficulty);
+        Constants.CUR_DIFF = difficulty;
+        startActivity(intent);
+    }
+    public void godGame(View view){
+        Intent intent = new Intent(this,GameActivity.class);
+        String difficulty = "god";
+        intent.putExtra("difficulty",difficulty);
+        Constants.CUR_DIFF = difficulty;
+        startActivity(intent);
+    }
+    public void highscoreActivity(View view){
+        Intent intent = new Intent(this,HighscoreActivity.class);
+        startActivity(intent);
+    }
+
     public void changeName(){
         final SharedPreferences prefs = getSharedPreferences("prefs", MODE_PRIVATE);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);

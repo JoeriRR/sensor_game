@@ -11,5 +11,6 @@ public class Constants {
     public static float Y_SENS;
     public static int DATASIZE;
     public static int MIN_SCORE;
+    public static String CUR_DIFF;
 
 }
