@@ -2,34 +2,45 @@ package com.joeribv.joerisgame;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentPagerAdapter;
 
-public class PagerAdapter extends FragmentStatePagerAdapter{
-    int nNoOfTabs;
-    public PagerAdapter(FragmentManager fm, int NumberOfTabs){
+import java.util.ArrayList;
+import java.util.List;
+
+public class PagerAdapter extends FragmentPagerAdapter {
+
+    private List<Fragment> fragments = new ArrayList<>(3);
+    private List<String> names = new ArrayList<>(3);
+
+    PagerAdapter(FragmentManager fm){
         super(fm);
-        this.nNoOfTabs = NumberOfTabs;
     }
+
     @Override
     public Fragment getItem(int position){
-        switch(position) {
-            case 0:
-                highScore_Tab1 tab1 = new highScore_Tab1();
-                return tab1;
-            case 1:
-                highScore_Tab2 tab2 = new highScore_Tab2();
-                return tab2;
-            case 2:
-                highScore_Tab3 tab3 = new highScore_Tab3();
-                return tab3;
-            default:
-                return null;
+        if (position > fragments.size()) {
+            throw new IllegalArgumentException();
         }
+
+        return fragments.get(position);
+    }
+
+    void addFragment(Fragment f, String name) {
+        fragments.add(f);
+        names.add(name);
     }
 
     @Override
     public int getCount(){
-        return nNoOfTabs;
+        return fragments.size();
     }
 
+    @Override
+    public CharSequence getPageTitle(int position) {
+        if (position > fragments.size()) {
+            throw new IllegalArgumentException();
+        }
+
+        return names.get(position);
+    }
 }
