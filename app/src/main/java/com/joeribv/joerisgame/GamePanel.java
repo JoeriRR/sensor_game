@@ -29,11 +29,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
     private int color_p = Color.RED;
     private int color_f = Color.BLUE;
     private int color_shield = Color.YELLOW;
+    private int color_time = Color.GREEN;
     private PlayerLoc player;
     private Point playerPoint;
     private PlayerLoc finish_p;
     private Point finishPoint;
     private PictureLoc shield;
+    private PictureLoc time;
+    private Point time_p;
     private Point shield_p;
     private float radius = (int)(Constants.SCREEN_WIDTH/108.0);
     private float radius_f = (int)(Constants.SCREEN_WIDTH/21.6);
@@ -44,12 +47,15 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
     private OrientationData orientationData;
 
     /* score variables */
+    private long pauseTime;
     private long frameTime;
     private boolean gameFinished = false; // check collision
     private long gameFinishTime;
     private int shield_timer;
+    private int time_timer;
     private int score = 1;
     private String difficulty;
+    private long pause_delay = 2000; // 1 sec pause
 
     /* animation variables */
     /* get difficulty from mainactivity*/
@@ -74,6 +80,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
         /* generate player */
         bf = new BitmapFactory();
         Bitmap shield_pic = bf.decodeResource(Constants.CURRENT_CONTEXT.getResources(),R.drawable.picture_shield);
+        Bitmap time_pic = bf.decodeResource(Constants.CURRENT_CONTEXT.getResources(),R.drawable.clock);
         player = new PlayerLoc(Constants.SCREEN_WIDTH/2,Constants.SCREEN_HEIGTH/2,radius,color_p);
         playerPoint = new Point(Constants.SCREEN_WIDTH/2,3*Constants.SCREEN_HEIGTH/4);
         /* generate finish point */
@@ -82,8 +89,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
         /* generate shield point*/
         shield = new PictureLoc((int)(x[0]+radius_f+(Math.random()*(((x[1]-radius_f)-(x[0]+radius_f))+1))),(int)(x[2]+radius_f+(Math.random()*((x[3]-radius_f)-(x[2]+radius_f))+1)),radius_c,color_shield,shield_pic);
         shield_p = new Point((int)(x[0]+radius_f+(Math.random()*(((x[1]-radius_f)-(x[0]+radius_f))+1))),(int)(x[2]+radius_f+(Math.random()*((x[3]-radius_f)-(x[2]+radius_f))+1)));
-
         shield_timer = (int)(Math.random()*4+8);
+        /* generate time powerup */
+        time = new PictureLoc((int)(x[0]+radius_f+(Math.random()*(((x[1]-radius_f)-(x[0]+radius_f))+1))),(int)(x[2]+radius_f+(Math.random()*((x[3]-radius_f)-(x[2]+radius_f))+1)),radius_c,color_time,time_pic);
+        time_p = new Point((int)(x[0]+radius_f+(Math.random()*(((x[1]-radius_f)-(x[0]+radius_f))+1))),(int)(x[2]+radius_f+(Math.random()*((x[3]-radius_f)-(x[2]+radius_f))+1)));
+        time_timer = (int)(Math.random()*6+6);
+
         /* start game thread */
         getHolder().addCallback(this);
         thread = new MainThread(getHolder(),this);
@@ -94,6 +105,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
 
         /* obstacle generator */ // scale obstacleheigth percentage.
         obstacleMover = new ObstacleMover(obstacleWidth,obstacleHeigth,score,speed_scaling);
+        obstacleMover.start();
         myMusic = MediaPlayer.create(Constants.CURRENT_CONTEXT,R.raw.impossible);
         myFail = MediaPlayer.create(Constants.CURRENT_CONTEXT,R.raw.failsound);
         myMusic.start();
@@ -120,7 +132,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
             retry = false;
         }
     }
-
     public void update() {
         if(!gameFinished) {
             if (frameTime < Constants.INIT_TIME) {
@@ -175,6 +186,17 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
                     shield_timer = shield_timer + (int)(Math.random()*4+8);
                 }
             }
+            if(score>=time_timer) {
+                if (time.playerFinished(player, time)) {
+                    time.update(time_p);
+                    pauseTime = System.currentTimeMillis();
+                    obstacleMover.pause();
+                    time_timer = time_timer + (int)(Math.random()*6+6);
+                }
+            }
+            if((System.currentTimeMillis()-pauseTime)>pause_delay){
+                obstacleMover.start();
+            }
         }
     }
     @Override
@@ -190,6 +212,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback{
         canvas.drawText("Score= " +(score-1),40,40,text_paint);
         if(score>=shield_timer) {
             shield.draw(canvas);
+        }
+        if(score>=time_timer){
+            time.draw(canvas);
         }
         obstacleMover.draw(canvas);
         if(gameFinished){

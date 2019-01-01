@@ -15,6 +15,7 @@ public class ObstacleMover {
     private int score;
     private int index;
     private float speed_scaling;
+    private int resetter;
     public ObstacleMover(int obstacleWidth, int obstacleHeigth,int score, float speed_scaling){
         this.score = score;
         this.obstaceWidth = obstacleWidth;
@@ -48,7 +49,7 @@ public class ObstacleMover {
         }
         int elapsedTime = (int)(System.currentTimeMillis()-startTime);
         startTime = System.currentTimeMillis();
-        float speed = (float)(Math.sqrt(1+(startTime-initTime)/2000)*Constants.SCREEN_HEIGTH/10000.0f)*speed_scaling; // add difficulty scaling.
+        float speed = (float)(Math.sqrt(1+(startTime-initTime)/2000)*Constants.SCREEN_HEIGTH/10000.0f)*speed_scaling*resetter; // add difficulty scaling.
         // add new obstacle each 5 points gained (see variable spawn_update) score here is (1+game_score/spawn_update) --> spawn_update = 5
         if(obstacles.size()<score){
             obstacles.add(new Obstacles(obstaceWidth,obstacleHeigth, Color.BLACK,Math.round((float)((Math.random()*3)+1))));
@@ -84,6 +85,12 @@ public class ObstacleMover {
                     break;
             }
         }
+    }
+    public void pause(){
+        resetter = 0;
+    }
+    public void start(){
+        resetter = 1;
     }
     public void draw(Canvas canvas){
         for(Obstacles ob: obstacles) {
